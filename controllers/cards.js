@@ -1,39 +1,44 @@
 const Card = require('../models/card');
+const {
+  BadRequestError,
+  NotYoursError,
+  NotFoundError
+} = require('../middlewares/error');
 require('./users');
 
-const getAllCards = (req, res) => {
+const getAllCards = (req, res, next) => {
   Card.find({})
     .then((card) => res.send({ data: card }))
-    .catch((err) => res.status(500).send({ message: `Произошла ошибка ${err}` }));
+    .catch(next);
 };
 
-const postCard = (req, res) => {
+const postCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.status(201).send({ data: card }))
-    .catch((err) => res.status(400).send({ message: `Произошла ошибка ${err}` }));
+    .catch(() => {throw new BadRequestError('Неверный запрос')})
+    .catch(next);
 };
 
-const deleteCardByCardId = (req, res) => {
+const deleteCardByCardId = (req, res, next) => {
   const { cardId } = req.params;
   Card.findById(cardId)
-    .then((card) => {
-      if (req.user._id === card.owner.toString()) {
-        Card.findByIdAndRemove(cardId)
-          .then(() => {
-            if (!card) {
-              res.status(404).send({ message: 'Такой карточки не существует' });
-              return;
-            }
-            res.send({ data: card });
-          })
-          .catch((err) => res.status(500).send({ message: `Произошла ошибка ${err}` }));
-      } else {
-        res.status(403).send({ message: 'Это карта Вам не принадлежит' });
-      }
-    })
-    .catch((err) => res.status(500).send({ message: err.message }));
+  .then((card) => {
+    if (!card) {
+      throw new NotFoundError('Такой карточки не существует');
+    }
+    if (req.user._id === card.owner.toString()) {
+      Card.findByIdAndRemove(cardId)
+      .then(() => {
+        res.send({ data: card });
+      })
+      .catch(next);
+    } else {
+      throw new NotYoursError('Это карта Вам не принадлежит');
+    }
+  })
+  .catch(next);
 };
 
 module.exports = {
