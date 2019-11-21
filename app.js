@@ -14,6 +14,7 @@ const { PORT = 3000 } = process.env;
 
 const app = express();
 const router = require('./routes/index.js');
+const { requestLogger, errorLogger } = require('./middlewares/logger');
 
 mongoose.connect('mongodb://localhost:27017/mestodb', {
   useNewUrlParser: true,
@@ -30,6 +31,9 @@ app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(requestLogger);
+
 // app.use(express.static(path.join(__dirname, 'public')));
 app.post('/signup', celebrate({
   body: Joi.object().keys({
@@ -52,17 +56,18 @@ app.use('/', router);
 app.use((req, res) => {
   res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
 });
-app.use(errors());
 
+app.use(errorLogger);
+app.use(errors());
 app.use((err, req, res, next) => {
   const { statusCode = 500, message } = err;
   res
-      .status(statusCode)
-      .send({
-          message: statusCode === 500
-              ? 'На сервере произошла ошибка'
-              : message
-      });
-}); 
+    .status(statusCode)
+    .send({
+      message: statusCode === 500
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
+});
 
 app.listen(PORT);
