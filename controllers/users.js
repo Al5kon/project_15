@@ -6,6 +6,7 @@ const { NotFoundError, BadRequestError, UnauthorizedError } =require('../middlew
 
 
 const getUserById = (req, res, next) => {
+  console.log('hi');
   User.findById(req.params._id)
     .then((user) => {
       if (!user) {
