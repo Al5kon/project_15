@@ -8,3 +8,5 @@ Create server
 ### v0.0.1 Add start files and folders
 ### v0.0.2 Add error
 ### v0.0.3 Add request validation
+### v0.0.4 Add logs
+### v0.0.5 Fix bugs

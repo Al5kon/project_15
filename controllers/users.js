@@ -2,11 +2,10 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
-const { NotFoundError, BadRequestError, UnauthorizedError } =require('../middlewares/error');
+const { NotFoundError, BadRequestError, UnauthorizedError } = require('../middlewares/error');
 
 
 const getUserById = (req, res, next) => {
-  console.log('hi');
   User.findById(req.params._id)
     .then((user) => {
       if (!user) {
@@ -35,7 +34,7 @@ const createUser = (req, res, next) => {
     .then((user) => {
       res.status(201).send({ data: user });
     })
-    .catch(() => { throw new BadRequestError('Ошибка запроса') })
+    .catch(() => { throw new BadRequestError('Ошибка запроса'); })
     .catch(next);
 };
 
@@ -46,11 +45,11 @@ const login = (req, res, next) => {
       const token = jwt.sign({ _id: user._id }, 'some-key', { expiresIn: '7d' });
       res.cookie('jwt', token, { maxAge: 360000 * 24 * 7, httpOnly: false, sameSite: true }).end();
     })
-    .catch((err) => { throw new UnauthorizedError('Нет доступа') })
+    .catch(() => { throw new UnauthorizedError('Нет доступа'); })
     .catch(next);
 };
 
-const findAllUsers = (req, res) => {
+const findAllUsers = (req, res, next) => {
   User.find({})
     .then((user) => res.send({ data: user }))
     .catch(next);
