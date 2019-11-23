@@ -8,7 +8,7 @@ routerCards.get('/', getAllCards);
 routerCards.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().required().min(2).max(30),
-    link: Joi.string().required(),
+    link: Joi.string().uri().max(50).required(),
   }),
 }), postCard);
 routerCards.delete('/:cardId', celebrate({
