@@ -15,3 +15,4 @@ Create server
 ### v0.0.4 Add logs
 ### v0.0.5 Fix bugs
 ### v0.0.6 Add .env
+### v0.0.7 Fix bugs
