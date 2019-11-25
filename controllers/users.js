@@ -44,7 +44,7 @@ const login = (req, res, next) => {
   return User.findUserByCredentials(email, password)
     .then((user) => {
       const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-key', { expiresIn: '7d' });
-      res.cookie('jwt', token, { maxAge: 360000 * 24 * 7, httpOnly: false, sameSite: true }).end();
+      res.cookie('jwt', token, { maxAge: 360000 * 24 * 7, httpOnly: true, sameSite: true }).end();
     })
     .catch(() => { throw new UnauthorizedError('Нет доступа'); })
     .catch(next);
