@@ -2,20 +2,21 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
+const { NotFoundError, BadRequestError, UnauthorizedError } = require('../middlewares/error');
 
-const getUserById = (req, res) => {
+
+const getUserById = (req, res, next) => {
   User.findById(req.params._id)
     .then((user) => {
       if (!user) {
-        res.status(404).send({ message: 'Такого пользователя не существует' });
-        return;
+        throw new NotFoundError('Такого пользователя не существует');
       }
       res.send({ data: user });
     })
-    .catch((err) => res.status(500).send({ message: `Произошла ошибка ${err}` }));
+    .catch(next);
 };
 
-const createUser = (req, res) => {
+const createUser = (req, res, next) => {
   const {
     name,
     about,
@@ -33,27 +34,26 @@ const createUser = (req, res) => {
     .then((user) => {
       res.status(201).send({ data: user });
     })
-    .catch((err) => res.status(400).send({ message: `Произошла ошибка ${err}` }));
+    .catch(() => { throw new BadRequestError('Ошибка запроса'); })
+    .catch(next);
 };
 
-const login = (req, res) => {
+const login = (req, res, next) => {
   const { email, password } = req.body;
+  const { NODE_ENV, JWT_SECRET } = process.env;
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const token = jwt.sign({ _id: user._id }, 'some-key', { expiresIn: '7d' });
-      res.cookie('jwt', token, { maxAge: 360000 * 24 * 7, httpOnly: false, sameSite: true }).end();
+      const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'some-key', { expiresIn: '7d' });
+      res.cookie('jwt', token, { maxAge: 360000 * 24 * 7, httpOnly: true, sameSite: true }).end();
     })
-    .catch((err) => {
-      res
-        .status(401)
-        .send({ message: err.message });
-    });
+    .catch(() => { throw new UnauthorizedError('Нет доступа'); })
+    .catch(next);
 };
 
-const findAllUsers = (req, res) => {
+const findAllUsers = (req, res, next) => {
   User.find({})
     .then((user) => res.send({ data: user }))
-    .catch((err) => res.status(500).send({ message: `Произошла ошибка ${err}` }));
+    .catch(next);
 };
 
 module.exports = {
